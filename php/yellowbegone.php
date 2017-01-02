@@ -1,10 +1,5 @@
 <?php
 
-$a = 'a';
-$b = 'B';
-echo "$a ? $b : ";
-echo max($a, $b);
-
 function yellowBeGone($colorNameOrCode) {
 
     $color_map = array(
