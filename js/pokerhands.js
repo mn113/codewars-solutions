@@ -108,6 +108,7 @@ class PokerHand {
                 this.goodcards = [this.values[i]];
                 console.log("match @", i);
                 this.kickers = this.values.splice(i,2);
+                console.log(this.kickers);
                 return true;
             }
         }
