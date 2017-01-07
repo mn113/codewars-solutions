@@ -1,8 +1,9 @@
 class PokerHand {
 
     constructor(hand) {
-        console.log(hand);
         this.values = [];
+        this.kickers = this.values; // in case no hand matched
+        this.goodcards = [];
         this.suits = [];
         // Make sense of the input string:
         hand.split(' ').forEach(function(card) {
@@ -21,7 +22,6 @@ class PokerHand {
         this.values.sort(function(a, b) {
             return b - a;
         });
-        console.log(this.values);
     }
 
     is4ofakind() {
@@ -45,6 +45,7 @@ class PokerHand {
             if (this.values[i] !== this.values[i+1] + 1) return false;
         }
         this.goodcards = [this.values[0]];
+        this.kickers = [];
         return true;
     }
 
@@ -52,6 +53,7 @@ class PokerHand {
         // All the same suit?
         if (this.matchingCards(this.suits)) {
             this.kickers = this.values;
+            this.goodcards = [];
             return true;
         }
         return false;
@@ -59,11 +61,11 @@ class PokerHand {
 
     isFullHouse() {
         // Look for 3 matching + 2 matching:
-        if (this.matchingCards(this.values.slice(0,3)) && this.matchingCards(this.values.slice(3,4))) {
+        if (this.matchingCards(this.values.slice(0,3)) && this.matchingCards(this.values.slice(3,5))) {
             this.goodcards = [this.values[0], this.values[3]];
             return true;
         }
-        else if (this.matchingCards(this.values.slice(0,2)) && this.matchingCards(this.values.slice(2,4))) {
+        else if (this.matchingCards(this.values.slice(0,2)) && this.matchingCards(this.values.slice(2,5))) {
             this.goodcards = [this.values[0], this.values[2]];
             return true;
         }
@@ -75,7 +77,8 @@ class PokerHand {
         for (var i = 0; i < 3; i++) {
             if (this.matchingCards(this.values.slice(i,i+3))) {
                 this.goodcards = [this.values[i]];
-                this.kickers = this.values.splice(i,3);
+                this.values.splice(i,3);
+                this.kickers = this.values;
                 return true;
             }
         }
@@ -106,9 +109,8 @@ class PokerHand {
         for (var i = 0; i < 4; i++) {
             if (this.matchingCards(this.values.slice(i,i+2))) {
                 this.goodcards = [this.values[i]];
-                console.log("match @", i);
-                this.kickers = this.values.splice(i,2);
-                console.log(this.kickers);
+                this.values.splice(i,2);
+                this.kickers = this.values;
                 return true;
             }
         }
@@ -131,7 +133,7 @@ class PokerHand {
         else if (this.isStraight()) rate = 40;  // ok
         else if (this.is3ofakind()) rate = 30;  // ok
         else if (this.is2pairs()) rate = 20;    // ok
-        else if (this.is1pair()) rate = 10;
+        else if (this.is1pair()) rate = 10;     // ok
 
         return [rate, 'G:'].concat(this.goodcards).concat('K:').concat(this.kickers);
     }
@@ -139,23 +141,21 @@ class PokerHand {
     compareWith(hand2) {
         var a = this.rateHand();
         var b = hand2.rateHand();
-        console.log(a, b);
 
         // Compare rank, then goodcards, then kickers:
         while (a.length > 0) {
             if (a[0] > b[0]) return 1;      // a wins
-            else if (a[0] < b[0]) return 3; // a loses
-            a.unshift();
-            b.unshift();
+            else if (a[0] < b[0]) return 2; // a loses
+            a.shift();
+            b.shift();
         }
         // Unresolved - a tie
-        return 2;
+        return 3;
     }
 }
 
-//var Result = { "win": 1, "loss": 2, "tie": 3 };
+var Result = { "win": 1, "loss": 2, "tie": 3 };
 
-var p = new PokerHand("2H 1e Kc 1s 3H");
-console.log(p.rateHand());
-//var q = new PokerHand("KS AS AS QS KS");
-//console.log(Result.win, "==", p.compareWith(q));
+var p = new PokerHand("8H 8H 8H 8H 3H");
+var q = new PokerHand("8S 8S 8S 8S 4S");
+console.log(Result.win, "==", p.compareWith(q));
