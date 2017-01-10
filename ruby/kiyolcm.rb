@@ -3,35 +3,32 @@ def kiyo_lcm(grid)
     return 0
   end
 
-  nums = convert_grid(grid)
-  puts nums.to_s
-
-  lcm(nums)
+  lcm(convert_grid(grid))
 end
 
 def convert_grid(grid)
   # Convert grid to sums of odd elements:
   grid.map! do |row|
-    row.map!.with_index do |el, i|
-      (i.even? && el.is_a?(Numeric)) ? el : 0
+    row.map! do |el|
+      ([1,3,5,7,9].include?(el)) ? el : 0
     end.reduce(:+)
   end
   grid
 end
 
-$primes = [2,3,5,7,11,13,17,19,23,29,31,37,41,43]  # input cannot exceed 45
+$primes = [2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79]  # input cannot exceed 81
 
 def lcm(nums)
   # get prime factors of each num
-  pfs = prime_factorise(nums).uniq
-  baseprimes = []
-  puts pfs.to_s
-  if pfs.include?(0)
+  if nums.include?(0)
     return 0
   end
 
+  pfs = prime_factorise(nums).uniq
+  baseprimes = []
+
   # Extract all common primes, starting with 2
-  primes.each do |p|
+  $primes.each do |p|
     most_p = 0
     pfs.each do |pf|
       new_most_p = pf.count { |x| x == p }

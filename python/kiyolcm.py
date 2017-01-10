@@ -26,9 +26,11 @@ primes = [2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79]  # inpu
 
 def lcm(nums):
     # Get prime factors of each num:
+    if 0 in nums:
+        return 0
+
     pfs = prime_factorise(nums)
     baseprimes = []
-    print pfs
 
     # Extract all common primes, starting with 2:
     for p in primes:
