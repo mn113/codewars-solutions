@@ -4,11 +4,7 @@
 def kiyo_lcm(grid):
     if grid == [[],[],[],[],[],[],[],[],[]]:
         return 0
-
-    nums = convert_grid(grid)
-    print nums
-
-    return lcm(nums)
+    return lcm(convert_grid(grid))
 
 
 def convert_grid(grid):
@@ -17,14 +13,15 @@ def convert_grid(grid):
     for row in grid:
         tot = 0
         for i in range(len(row)):
-            if i % 2 == 0 and isinstance(row[i], (int, long)):
+            # Must be odd integer:
+            if row[i] in [1,3,5,7,9]:
                 tot += row[i]
         totals.append(tot)
 
     return totals
 
 
-primes = [2,3,5,7,11,13,17,19,23,29,31,37,41,43]  # input cannot exceed 45
+primes = [2,3,5,7,11,13,17,19,23,29,31,37,41,43,47,53,59,61,67,71,73,79]  # input cannot exceed 81
 
 
 def lcm(nums):
