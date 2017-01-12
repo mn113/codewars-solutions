@@ -13,10 +13,8 @@ function diff(b,c) {
 }
 
 function undiff(b,c) {
-    return ALPH[(ALPH.length + ALPH.indexOf(b) - ALPH.indexOf(c)) % ALPH.length];
+    return diff(b,c);   // Function is its own inverse
 }
-
-console.log(undiff('B','6'));   // U
 
 function mirror(char) {
     return ALPH[ALPH.length - 1 - ALPH.indexOf(char)];
