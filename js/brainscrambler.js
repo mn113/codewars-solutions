@@ -11,12 +11,11 @@ class Interpreter {
     }
 
     incr(num) {
-        try {
-            var newNum = this.stacks[this.sid].pop() + num;
+        var newNum = this.stacks[this.sid].pop() + num;
+        if (!Number.isNaN(newNum)) {
             this.stacks[this.sid].push(newNum);
         }
-        catch (e) {
-            console.log(e);
+        else {
             this.pushZero();
         }
     }
@@ -31,7 +30,8 @@ class Interpreter {
         // Rotate 3 times so we keep the same spot:
         this.rotate();
         this.rotate();
-        this.input(num);
+        // Only shift if defined:
+        if (typeof num !== 'undefined') this.input(num);
         this.rotate();
     }
 
@@ -39,7 +39,8 @@ class Interpreter {
         var num = this.stacks[this.sid].pop();
         // Rotate 3 times so we keep the same spot:
         this.rotate();
-        this.input(num);
+        // Only shift if defined:
+        if (typeof num !== 'undefined') this.input(num);
         this.rotate();
         this.rotate();
     }
@@ -53,15 +54,22 @@ class Interpreter {
     }
 
     copyToOutput() {
-        this.output.push(this.getCurrentNum());
+        var num = this.getCurrentNum();
+        // Only push if defined:
+        if (typeof num !== 'undefined') this.output.push(num);
     }
 
     input(num) {
         this.stacks[this.sid].push(num);
     }
 
-    read(input) {
-        this.output = [];
+    read(input, looping) {
+        if (typeof looping === 'undefined') {
+            // Reset output when in standard mode:
+            //console.log(input);
+            looping = false;
+            this.output = [];
+        }
         while (input.length > 0) {
             // Take off first character:
             var char = input[0];
@@ -76,28 +84,38 @@ class Interpreter {
                 case '^': this.discardLast(); break;
                 case '.': this.copyToOutput(); break;
                 case ',':
-                    // Take next input char as a digit to input:
-                    this.input(parseInt(input[0], 10));
-                    input = input.slice(1);
+                    // Take next input chars as digits to input:
+                    var digits = parseInt(input, 10);
+                    var len = digits.toString().length;
+                    input = input.slice(len);
+                    this.input(digits);
                     break;
                 case '[':
-                    var looptimes = this.getCurrentNum();
-                    // Replace bracketed section n times:
-                    input = input.replace(/(.+)\]/, '$1'.repeat(looptimes));     // captures commands up to ]
-                    // Continue reading:
+                    // Find commands within brackets:
+                    var loopCmds = input.slice(0, input.indexOf(']'));
+                    do {
+                        this.read(loopCmds, true);  // read, in looping mode
+                    } while (this.getCurrentNum() > 0);
+                    // Now skip bracketed section:
+                    input = input.slice(input.indexOf(']'));
                     break;
                 case ']':
                     break;
                 default:
                     break;
             }
-            console.log(char, this.stacks, this.sid, this.output);
+            //console.log(char, this.stacks, this.sid, this.output);
         }
         // Return output string when done reading commands:
-        console.log(this.output.join(""));
-        return this.output.join("");
+        if (!looping) {
+            //console.log(this.output.join(""));
+            return this.output.join("");
+        }
     }
 }
 
 var inter = new Interpreter();
-inter.read('+++,9[.-]+++');   //,'987654321'
+inter.read('++.>.,721#+<#<.<*<++<+*>++.#'); // '22'
+//inter.read(',10>*#[-##.+#]');   //,'0123456789'
+//inter.read(',9[.--]');  //,'97531'
+//inter.read('+++,9[.-]+++');   //,'987654321'
