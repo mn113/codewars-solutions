@@ -1,8 +1,8 @@
 #! /usr/bin/env python
-# Decode roman numerals under 4000
+# Decode roman numerals under 4999
 
-def solution(roman):
-    """complete the solution by transforming the roman numeral into an integer"""
+def decode_roman(roman):
+    """Transforms a roman numeral string into an integer."""
     total = 0
     tabula = {
         "M": 1000, "CM": 900, "D": 500, "CD": 400,
@@ -22,4 +22,21 @@ def solution(roman):
 
     return total
 
-print solution("MCMLXXXIV")
+
+def encode_roman(num):
+    """Transforms an integer into a roman numeral string."""
+    roman = ""
+    tabula = [
+        ("M",1000), ("CM",900), ("D",500), ("CD",400),
+        ("C",100),  ("XC",90),  ("L",50),  ("XL",40),
+        ("X",10),   ("IX",9),   ("V",5),   ("IV",4),
+        ("I",1)
+    ]
+    for v in tabula:
+        while num >= v[1]:
+            roman += v[0]
+            num -= v[1]
+
+    return roman
+
+print decode_roman("MMMMDCDXCIX"), '=', encode_roman(1984)
