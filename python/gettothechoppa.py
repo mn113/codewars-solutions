@@ -52,12 +52,31 @@ def find_shortest_path(grid, start_node, end_node):
                     dist_to[nextNode] = dist_to[current] + 1
                     came_from[nextNode] = current
 
+    # Visuals:
+    print_weighted_grid(dist_to, grid)
+
     # Finished seeing nodes now
     if end_node in came_from.keys():
         print "DONE"
         return traceback(end_node, came_from)
     else:
         return "No path found"
+
+def print_weighted_grid(dist_dict, grid):
+    # Insert dict values into grid positions:
+    for node,dist in dist_dict.items():
+        row = node.coords[0]
+        col = node.coords[1]
+        grid[row][col] = dist
+    # Print grid:
+    for y in range(len(grid)):
+        for x in range(len(grid[0])):
+            # Node or int?
+            if isinstance(grid[y][x], Node):
+                print ' X ',
+            else:
+                print str(grid[y][x]).center(3, ' '),
+        print ""    # newline
 
 def traceback(goal, came_from):
     parent = came_from[goal]
