@@ -12,22 +12,32 @@ def neighbours(node, grid):
     # Only return passable nodes:
     return [nb for nb in [up, down, left, right] if nb != node and nb.passable]
 
+#def manhattan_dist(a,b):
+#    return abs(a.coords[0] - b.coords[0]) + abs(a.coords[1] - b.coords[1])
+
 def find_shortest_path(grid, start_node, end_node):
     dist_to = {start_node: 0}    # measures steps to each node
     to_visit = [start_node]
     came_from = {start_node: None}   # traces the path taken
+    maxsteps = 1000
+    minsteps = manhattan_dist(start_node, end_node)
 
     while len(to_visit) > 0:
         current = to_visit.pop()
         print "Visiting", current, dist_to[current]
 
         if current == end_node:
+            # Store shortest distance:
+            maxsteps = dist_to[current]
             print 'GOAL!', len(to_visit), "to see"
+            if minsteps == dist_to[current]:
+                # Shortest path found!
+                break
             # Keep searching, to guarantee shortest:
             continue
 
         # Give up when path is too long:
-        if dist_to[current] > 100:
+        if dist_to[current] >= maxsteps:
             continue
 
         neighbs = neighbours(current, grid)
