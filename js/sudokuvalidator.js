@@ -19,13 +19,8 @@ var Sudoku = function(data)
     function rowsValid() {
         for (var r = 0; r < h; r++) {
             // Compare row with ideals array, first by length, then by values:
-            var row = data[r].slice().sort();
-            if (row.length !== ideals.length) return false;
-            else {
-                for (var i = 0; i < row.length; i++) {
-                    if (row[i] !== ideals[i]) return false;
-                }
-            }
+            var row = data[r].slice();
+            if (!equalArrays(row.sort(), ideals)) return false;
         }
         return true;
     }
@@ -38,14 +33,8 @@ var Sudoku = function(data)
             for (var r = 0; r < h; r++) {
                 col.push(data[r][c]);
             }
-            col.sort();
             // Compare col with ideals array, first by length, then by values:
-            if (col.length !== ideals.length) return false;
-            else {
-                for (var i = 0; i < col.length; i++) {
-                    if (col[i] !== ideals[i]) return false;
-                }
-            }
+            if (!equalArrays(col.sort(), ideals)) return false;
         }
         return true;
     }
@@ -66,14 +55,8 @@ var Sudoku = function(data)
                     box.push(data[j][k]);
                 }
             }
-            box.sort();
             // Compare box with ideals array, first by length, then by values:
-            if (box.length !== ideals.length) return false;
-            else {
-                for (var x = 0; x < box.length; x++) {
-                    if (box[x] !== ideals[x]) return false;
-                }
-            }
+            if (!equalArrays(box.sort(), ideals)) return false;
         }
         return true;
     }
@@ -85,6 +68,12 @@ var Sudoku = function(data)
         }
     };
 };
+
+function equalArrays(a, b) {
+    return (a.length === b.length) && a.every(function(e, i) {
+        return e === b[i];
+    });
+}
 
 
 var goodSudoku1 = new Sudoku([
