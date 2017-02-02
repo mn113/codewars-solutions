@@ -78,19 +78,23 @@ print search_genome(build_bad_genome(200))
 
 
 # TESTS
-# MUST FIND SINGLE ROGUE AT BEGINNING               - "SCATATATATATATATATATAT"
-# MUST FIND SINGLE ROGUE AT END                     - "GATTACAGATTACAGATTACAX"
-# MUST RETURN "No sequence found." WHEN NO ROGUES   - "AAAAAAAAAAAAAAAAAAAAAAA"
+# VERY SHORT STRING WITH A SUBSTRING                - "AXA"
+# VERY SHORT STRING WITH NO SAFE SUBSTRING          - "AXAXA"
+# MUST FIND SINGLE ROGUE AT BEGINNING               - "SCATATATA"
+# MUST FIND SINGLE ROGUE AT END                     - "GATTACAX"
+# ROGUE GROUP MIDWAY - MUST FIND EARLIEST SUBSTRING - "AAAABZAAAGTTGCA"
+# MUST FIND STRING BOUND BY 2 ROGUES                - "GGGGDADGGGG"
+# MUST RETURN "No sequence found." WHEN NO ROGUES   - "AAAAAAAAAAAAA"
 # MUST FIND FIRST SEQUENCE IF ROGUES EVENLY SPACED  - "CQCCCQCCCQCCCQCCCQCCCQC"
 # MUST NOT OVERLAP END                              - "UTACTACTACTACTACUUGUGUG"
-# MUST FIND STRING BOUND BY 2 ROGUES
-# MUST FIND SEQUENCE WITH < 20% GOOD GENE LOSS
-# IF MULTIPLE SEQUENCES, RETURN THE ONE WITH LEAST HUMAN DNA
-# MUST WORK ON LONG INPUT (1000+)
+# MUST CHOOSE SEQUENCE WITH < 20% GOOD GENE LOSS    - "CCCCCCDTTTTDDCCCDDCCC"
+# MUST RETURN THE SUBSTRING WITH LEAST HUMAN DNA    - "TPAAAPTTTTPAAPTTTPAPTTTT"
+# MUST REPLICATE MY RESULTS FOR 100 RANDOM SEQUENCES OF LENGTH 10-300
+# MUST WORK ON 5 RANDOM LONG INPUTS (1000+)
 '''
 Astronaut Cody Warshaw has just returned from space. His post-flight medical shows an abnormality which requires immediate intervention: it appears that his DNA has been infected by an alien species!
 
-The normal human genome is composed from four different proteins, `'A', 'C', 'G' & 'T'`, which are chained together into long sequences, e.g. `GTACAATTACCGTTGGTACCATTCGA`. NASA's microscope shows that the protein chains in Cody's chromosomes have a number of intruders, which will be represented by the remaining 22 uppercase letters from 'B' to 'Z'.
+The normal human genome is composed from four different proteins, `'A', 'C', 'G' & 'T'`, which are chained together into long sequences, e.g. `GTACAATTACCGTTGGTACCATTCGA`. The protein chains in Cody's chromosomes have a number of intruders, which will be represented by any of the remaining 22 uppercase letters from 'B' to 'Z'.
 
 Thus, an infected protein chain might look like this: `CUTGAGETTPRCCTEAZGAC`
 

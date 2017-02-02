@@ -29,7 +29,7 @@ with open("most-common-latin-words.txt") as fp:
         if len(word) > 1:
             latinwords.append(latinise(word))
 # Sort by length:
-latinwords.sort(cmp = lambda a,b: len(a)-len(b))
+latinwords[:6000].sort(cmp = lambda a,b: len(a)-len(b))
 print len(latinwords), "words"
 
 # Single word, len > 6:
@@ -42,8 +42,7 @@ brute_force([w+str(x)+str(y) for w in latinwords for x in string.digits for y in
 midchars = ":., "
 midpairs = [t[0]+t[1] for t in list(itertools.product(midchars,midchars))]
 midpairs += [m for m in midchars]
-print midpairs
 
-latinwords36 = [w for w in latinwords if len(w) >= 3 and len(w) <= 5]
-print len(latinwords36), "words 3-6"
-brute_force([w1+mid+w2 for w1 in latinwords36 for w2 in latinwords36 for mid in midpairs if len(w1) == len(w2)], secret3)
+latinwords24 = [w for w in latinwords if len(w) >= 2 and len(w) <= 4]
+print len(latinwords24), "words 2-4"
+brute_force([w1+mid+w2 for w1 in latinwords24 for w2 in latinwords24 for mid in midpairs if len(w1) == len(w2)], secret3)
