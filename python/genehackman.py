@@ -74,23 +74,23 @@ def search_genome(genome):
     return "No sequence found."
 
 
-print search_genome(build_bad_genome(200))
+#print search_genome(build_bad_genome(200))
 
-
-# TESTS
-# VERY SHORT STRING WITH A SUBSTRING                - "AXA"
-# VERY SHORT STRING WITH NO SAFE SUBSTRING          - "AXAXA"
-# MUST FIND SINGLE ROGUE AT BEGINNING               - "SCATATATA"
-# MUST FIND SINGLE ROGUE AT END                     - "GATTACAX"
-# ROGUE GROUP MIDWAY - MUST FIND EARLIEST SUBSTRING - "AAAABZAAAGTTGCA"
-# MUST FIND STRING BOUND BY 2 ROGUES                - "GGGGDADGGGG"
-# MUST RETURN "No sequence found." WHEN NO ROGUES   - "AAAAAAAAAAAAA"
-# MUST FIND FIRST SEQUENCE IF ROGUES EVENLY SPACED  - "CQCCCQCCCQCCCQCCCQCCCQC"
-# MUST NOT OVERLAP END                              - "UTACTACTACTACTACUUGUGUG"
-# MUST CHOOSE SEQUENCE WITH < 20% GOOD GENE LOSS    - "CCCCCCDTTTTDDCCCDDCCC"
-# MUST RETURN THE SUBSTRING WITH LEAST HUMAN DNA    - "TPAAAPTTTTPAAPTTTPAPTTTT"
+# Test suite:
+print search_genome("AXA");              # VERY SHORT STRING WITH A SUBSTRING       => 'X'
+print search_genome("AMAMA");            # VERY SHORT STRING WITH NO SAFE SUBSTRING => 'M'
+print search_genome("SCATATATA");        # MUST FIND SINGLE ROGUE AT BEGINNING      => 'S'
+print search_genome("GATTACAX");         # MUST FIND SINGLE ROGUE AT END            => 'X'
+print search_genome("AAAABZAAAGTTGCA");  # ROGUE GROUP MIDWAY - MUST FIND EARLIEST SUBSTRING         => 'BZ'
+print search_genome("GGGGDADGGGG");      # MUST FIND STRING BOUND BY 2 ROGUES                        => 'DAD'
+print search_genome("AAAAAAAAAAAAA");    # MUST RETURN "No sequence found." WHEN NO ROGUES           => 'No sequence found.'
+print search_genome("CQCCCQCCCQCCCQCCCQCCCQC");  # MUST FIND FIRST SEQUENCE IF ROGUES EVENLY SPACED  => 'QCCCQ'
+print search_genome("UTACTACTACTACTACUUGUGUG");  # MUST NOT OVERLAP END                              => 'UUGUGU'
+print search_genome("CCCCCCDTTTTDDCCCDDCCC");    # MUST CHOOSE SEQUENCE WITH < 20% GOOD GENE LOSS    => 'DDCCCDD'
+print search_genome("TPAAAPTTTTPAAPTTTPAPTTTT"); # MUST RETURN THE SUBSTRING WITH LEAST HUMAN DNA    => 'PAP'
 # MUST REPLICATE MY RESULTS FOR 100 RANDOM SEQUENCES OF LENGTH 10-300
 # MUST WORK ON 5 RANDOM LONG INPUTS (1000+)
+
 '''
 Astronaut Cody Warshaw has just returned from space. His post-flight medical shows an abnormality which requires immediate intervention: it appears that his DNA has been infected by an alien species!
 
