@@ -1,21 +1,22 @@
 def calc expression
   p expression
-  p parts = (expression.instance_of? Array) ? expression : split(expression)
+  parts = (expression.instance_of? Array) ? expression : split(expression)
 
-  p parts = handle_neg_brackets(parts)
-  p parts = resolve_brackets(parts) if parts.include?('(')
-  p parts = cancel_negatives(parts)
-  p parts = do_division(parts)
-  p parts = do_multiplication(parts)
-  p parts = do_addition(parts)
-  p parts = do_subtraction(parts)
-
-  parts.first.round(3)
+  parts = handle_neg_brackets(parts)
+  while parts.include?('(') do
+    parts = resolve_brackets(parts)
+  end
+  parts = cancel_negatives(parts)
+  parts = do_division(parts)
+  parts = do_multiplication(parts)
+  parts = do_addition(parts)
+  parts = do_subtraction(parts)
+  parts.reduce(:+)
 end
 
 def split(expression)
   number_re = /^\s?(\-?[\d\.]+)/        # dig.its
-  operator_re = /^\s?([+\-*\/\(\)])/    # single +-*/()  parts = []
+  operator_re = /^\s?([+\-*\/\(\)])/    # single +-*/()
 
   # Extract parts using regexes:
   parts = []
@@ -60,8 +61,6 @@ def resolve_brackets(parts)
   # Replace brackets with recursion-evaluated expansion:
   parts.insert(opener, calc(innards))
   parts.slice!(opener+1, closer-opener)
-  p "Brackets done"
-  parts
 end
 
 def cancel_negatives(parts)
