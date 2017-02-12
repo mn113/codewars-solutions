@@ -1,3 +1,9 @@
+function Cell(x,y,val) {
+    this.x = x;
+    this.y = y;
+    this.val = val;
+}
+
 function solveMine(mineMap, n){
     // Convert board:
     var board = mineMap.split('\n')
@@ -5,21 +11,36 @@ function solveMine(mineMap, n){
     var height = board.length,
         width = board[0].length;
 
-    var clicked = [];
-    var found = 0;
+    // Initialise cells:
+    var cells = [];
+    for (var y = 0; y < height; y++) {
+        for (var x = 0; x < width; x++) {
+            cells.push(new Cell(x,y,board[y][x]));
+        }
+    }
+    //console.log(cells);
+
+    var minesFound = 0,
+        interesting = [],
+        visited = [];
 
     // Start solving:
     return (function() {
         // Check all zeros, then all 1s, 2s... (multiple times)
         var passes = 0;
         while (passes < 5) {
-            console.log("Pass", passes);
-            clickAll('0');
-            clickAll('1');
-            clickAll('2');
-            clickAll('3');
-            clickAll('4');  // more?
+            console.log("-- Pass", passes);
+            interesting = interesting.concat(findAll('0'));
+            interesting = interesting.concat(findAll('1'));
+            interesting = interesting.concat(findAll('2'));    // more?
+            console.log("Interesting:", interesting.length);
+            while(interesting.length > 0) {
+                var cell = interesting.shift();
+                visited.push(cell);
+                clickAround(cell);
+            }
             passes++;
+            console.log("Visited:", visited.length);
             console.log(board);
         }
         // Wait...
@@ -43,13 +64,23 @@ function solveMine(mineMap, n){
     }());
 
 
-    function neighbours(x,y,matchChar) {
+    function neighbours(c, matchChar) {
         // Get valid neighbours' coords:
+        var x = c.x, y = c.y;
         var neighbs = [[x-1,y-1], [x,y-1], [x+1,y-1],
                        [x-1,y  ],          [x+1,y  ],
                        [x-1,y+1], [x,y+1], [x+1,y+1]];
 
-        return neighbs.filter(n => isValidCell(n[0],n[1]) && board[n[1]][n[0]] === matchChar);
+        neighbs = neighbs.filter(n => isValidCell(n[0],n[1]) && board[n[1]][n[0]] === matchChar);
+
+        // Find those as cell objects:
+        var validCells = [];
+        for (var nb of neighbs) {
+            for (var cell of cells) {
+                if (nb[0] === cell.x && nb[1] === cell.y) validCells.push(cell);
+            }
+        }
+        return validCells;
     }
 
 
@@ -60,69 +91,76 @@ function solveMine(mineMap, n){
     }
 
 
-    function markMine(x,y) {
-        board[y][x] = 'x';
-        found++;
-        console.log('marking', [x,y], 'found', found, 'mines');
-        if (found === n) {
+    function markMine(c) {
+        board[c.y][c.x] = 'x';
+        c.val = 'x';
+        minesFound++;
+        console.log('marking', c, 'now found', minesFound, 'mines');
+        if (minesFound === n) {
             // Board is safe, finish it off:
-            clickAll('?');
+            var remaining = findAll('?');
+            remaining.forEach(function(c) {
+                clickCell(c,'finish off');
+            });
         }
     }
 
 
-    function clickCell(x,y, caller) {
-        var numMinesHere = open(y,x);
-        board[y][x] = numMinesHere;
-        clicked.push([x,y]);
-        console.log('clicking', [x,y], 'from', caller.toString(), '->', numMinesHere, 'mines');
+    function clickCell(c) {
+        var numMinesHere = open(c.y,c.x);
+        board[c.y][c.x] = numMinesHere;
+        c.val = numMinesHere;
+        visited.push(c);
+        console.log('clicking', c, '->', numMinesHere, 'mines');
+    }
+
+
+    function clickAround(c) {
+        var numMinesHere = parseInt(c.val);
+        console.log('clicking around', c, '(', numMinesHere,')');
 
         // Get neighbours:
-        var knownMines = neighbours(x,y,'x'),
-            unknowns = neighbours(x,y,'?');
+        var knownMines = neighbours(c,'x'),
+            unknowns = neighbours(c,'?');
         console.log(numMinesHere, 'm', knownMines.length, 'x', unknowns.length, '?');  // ok
+
         // Open neighbours:
-        if (numMinesHere == 0 || numMinesHere == knownMines.length) {
-            console.log('Im going to click all unknowns...');
+        if (numMinesHere === 0 || numMinesHere === knownMines.length) {
+            //console.log('Im going to click all unknowns...');
             // Click all '?'s
-            unknowns.forEach(function(un) {
-                console.log('cl',un);
-                clickCell(un[0],un[1], [x,y]);
+            unknowns.forEach(function(unCell) {
+                //console.log('cl',un);
+                clickCell(unCell);
             });
         }
-        else if (numMinesHere == knownMines.length + unknowns.length) {
-            console.log('Im going to mark all unknowns...');
+        else if (numMinesHere === knownMines.length + unknowns.length) {
+            //console.log('Im going to mark all unknowns...');
             // Mark all '?'s as 'x'
-            unknowns.forEach(function(um) {
-                console.log('mk',um);
-                markMine(um[0],um[1]);
+            unknowns.forEach(function(mineCell) {
+                //console.log('mk',um);
+                markMine(mineCell);
             });
         }
         else {
             console.log('No action possible here');
+            //console.log(board);
         }
-        console.log('Finished with', [x,y]);
-        return true;
+        //console.log('Finished with', [x,y]);
     }
 
 
-    function clickAll(matchChar) {
-        // Search for and click everything that matches matchChar:
-        for (var y = 0; y < height; y++) {
-            for (var x = 0; x < width; x++) {
-                if (board[y][x] === matchChar) {
-                    if (clicked.includes([x,y])) {
-                        console.log("Seen", [x,y]);
-                    }
-                    else {
-                        console.log("Found one");
-                        clickCell(x,y,'clickAll('+matchChar+')');
-                    }
+    function findAll(matchChar) {
+        var found = [];
+        // Search for everything that matches matchChar:
+        for (var c of cells) {
+            if (c.val === matchChar) {
+                if (!visited.includes(c) && !interesting.includes(c)) {
+                    found.push(c);
                 }
             }
         }
-        console.log('All', matchChar, 'clicked');
-        return true;
+        console.log('Found', found.length, 'of', matchChar);
+        return found;
     }
 
 
