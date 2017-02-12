@@ -10,21 +10,25 @@ function solveMine(mineMap, n){
 
     // Start solving:
     return (function() {
-        // Check all zeros, then all 1s, 2s...: (need to loop multiple times or until found = n)
+        // Check all zeros, then all 1s, 2s... (multiple times)
         var passes = 0;
-        while (passes < 7) {
+        while (passes < 5) {
             console.log("Pass", passes);
-            clickAll(passes.toString());
+            clickAll('0');
+            clickAll('1');
+            clickAll('2');
+            clickAll('3');
+            clickAll('4');  // more?
             passes++;
             console.log(board);
         }
         // Wait...
         setTimeout(function() {
-            // Stringify for output:
-            mineMap = board.map(row => row.join(' '))
-                           .join('\n');
+            // Stringify for '?' check:
+            mineMap = board.map(row => row.join(' ')).join('\n');
             var qs = (mineMap.match(/\?/g)||[]).length;
             console.log(qs, 'unknowns remaining');
+
             // Try to resolve stalemate:
             if (qs < 10 && qs > 1) {
                 console.log("Analysing situation...");
@@ -32,8 +36,7 @@ function solveMine(mineMap, n){
             }
 
             // Stringify for output:
-            mineMap = board.map(row => row.join(' '))
-                           .join('\n');
+            mineMap = board.map(row => row.join(' ')).join('\n');
             return (mineMap.includes('?')) ? '?' : mineMap;
         }, 2000);
 
@@ -77,24 +80,26 @@ function solveMine(mineMap, n){
         // Get neighbours:
         var knownMines = neighbours(x,y,'x'),
             unknowns = neighbours(x,y,'?');
-        console.log(numMinesHere, 'm', knownMines.length, 'x', unknowns.length, '?');
-
+        console.log(numMinesHere, 'm', knownMines.length, 'x', unknowns.length, '?');  // ok
         // Open neighbours:
-        if (numMinesHere === 0 || numMinesHere === knownMines.length) {
+        if (numMinesHere == 0 || numMinesHere == knownMines.length) {
             console.log('Im going to click all unknowns...');
             // Click all '?'s
-            for (var un in unknowns) {
+            unknowns.forEach(function(un) {
                 console.log('cl',un);
                 clickCell(un[0],un[1], [x,y]);
-            }
+            });
         }
-        else if (numMinesHere === knownMines.length + unknowns.length) {
+        else if (numMinesHere == knownMines.length + unknowns.length) {
             console.log('Im going to mark all unknowns...');
             // Mark all '?'s as 'x'
-            for (var um in unknowns) {
+            unknowns.forEach(function(um) {
                 console.log('mk',um);
                 markMine(um[0],um[1]);
-            }
+            });
+        }
+        else {
+            console.log('No action possible here');
         }
         console.log('Finished with', [x,y]);
         return true;
@@ -105,9 +110,14 @@ function solveMine(mineMap, n){
         // Search for and click everything that matches matchChar:
         for (var y = 0; y < height; y++) {
             for (var x = 0; x < width; x++) {
-                if (board[y][x] === matchChar && !clicked.includes([x,y])) {
-                    console.log("Found one");
-                    clickCell(x,y,'clickAll('+matchChar+')');
+                if (board[y][x] === matchChar) {
+                    if (clicked.includes([x,y])) {
+                        console.log("Seen", [x,y]);
+                    }
+                    else {
+                        console.log("Found one");
+                        clickCell(x,y,'clickAll('+matchChar+')');
+                    }
                 }
             }
         }
