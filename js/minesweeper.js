@@ -4,7 +4,7 @@ function Cell(x,y,val) {
     this.val = val;
 }
 
-function solveMine(mineMap, n){
+function solveMine(mineMap, totalMines){
     // Convert board:
     var board = mineMap.split('\n')
                        .map(row => row.split(' '));
@@ -18,7 +18,6 @@ function solveMine(mineMap, n){
             cells.push(new Cell(x,y,board[y][x]));
         }
     }
-    //console.log(cells);
 
     var minesFound = 0,
         interesting = [],
@@ -36,33 +35,96 @@ function solveMine(mineMap, n){
             console.log("Interesting:", interesting.length);
             while(interesting.length > 0) {
                 var cell = interesting.shift();
-                visited.push(cell);
+                //visited.push(cell);    // only put them into visited here
                 clickAround(cell);
             }
             passes++;
             console.log("Visited:", visited.length);
             console.log(board);
         }
-        // Wait...
-        setTimeout(function() {
-            // Stringify for '?' check:
-            mineMap = board.map(row => row.join(' ')).join('\n');
-            var qs = (mineMap.match(/\?/g)||[]).length;
-            console.log(qs, 'unknowns remaining');
-
-            // Try to resolve stalemate:
-            if (qs < 10 && qs > 1) {
-                console.log("Analysing situation...");
-                analyse();
-            }
-
-            // Stringify for output:
-            mineMap = board.map(row => row.join(' ')).join('\n');
-            return (mineMap.includes('?')) ? '?' : mineMap;
-        }, 2000);
+        return solveEndgame();
 
     }());
 
+    function solveEndgame() {
+        var remaining = findAll('?');
+        var rMines = totalMines - minesFound;
+        var solutions = [];
+        console.log("Remaining:", remaining);
+        console.log("Interesting:", interesting);
+        console.log(rMines, "mines left");
+        if (remaining.length > 0) {
+            // Try to resolve stalemate:
+            console.log("Starting permutations...");
+            var perms = simplePerms(rMines, remaining.length);
+            for (var p of perms) {
+                generateSolution(p);
+            }
+            if (solutions.length > 1) return '?';
+            else {
+                // Stringify for output:
+                mineMap = board.map(row => row.join(' ')).join('\n');
+                return (mineMap.includes('?')) ? '?' : mineMap;
+            }
+        }
+        else {
+            // Stringify for output:
+            mineMap = board.map(row => row.join(' ')).join('\n');
+            return (mineMap.includes('?')) ? '?' : mineMap;
+        }
+
+        function simplePerms(mines, spaces) {
+            var basis = Array.from('x'.repeat(mines)).concat(Array.from('?'.repeat(spaces-mines)));
+            var permutations = [];
+            doPerm(basis, []);
+            return permutations;
+
+            function doPerm(str, arr) {
+                if (typeof str === 'string') str = str.split('');
+                if (str.length === 0 && !permutations.includes(arr.join(''))) {
+                    permutations.push(arr.join(''));
+                }
+                for (var i = 0; i < str.length; i++) {
+                    var x = str.splice(i, 1);
+                    arr.push(x);
+                    doPerm(str, arr);
+                    arr.pop();
+                    str.splice(i, 0, x);
+                }
+            }
+        }
+
+        function generateSolution(comboStr) {   // TODO: not finished
+            var combo = comboStr.split('');
+            for (var i = 0; i < combo.length; i++) {
+                remaining[i].val = combo[i];
+            }
+            console.log(remaining);
+            if (validateSolution(sol)) {
+                solutions.push(sol);
+            }
+            // reset
+            for (var r of remaining) {
+                r.val = '?';
+            }
+        }
+
+        function validateSolution(sol) {    // TODO: not finished
+            for (var y = 0; y < height; y++) {
+                for (var x = 0; x < width; x++) {
+                    // Find respective cell object:
+                    for (var cell of cells) {
+                        if (x === cell.x && y === cell.y) {
+                            if (cell.val !== neighbours(cell, 'x').length) return false;  // error in this solution
+                            break;
+                        }
+                    }
+                }
+            }
+            return true;
+        }
+
+    }
 
     function neighbours(c, matchChar) {
         // Get valid neighbours' coords:
@@ -95,12 +157,12 @@ function solveMine(mineMap, n){
         board[c.y][c.x] = 'x';
         c.val = 'x';
         minesFound++;
-        console.log('marking', c, 'now found', minesFound, 'mines');
-        if (minesFound === n) {
+        console.log('marking', c, ', now found', minesFound, '/', totalMines, 'mines');
+        if (minesFound === totalMines) {
             // Board is safe, finish it off:
             var remaining = findAll('?');
             remaining.forEach(function(c) {
-                clickCell(c,'finish off');
+                clickCell(c);
             });
         }
     }
@@ -110,7 +172,7 @@ function solveMine(mineMap, n){
         var numMinesHere = open(c.y,c.x);
         board[c.y][c.x] = numMinesHere;
         c.val = numMinesHere;
-        visited.push(c);
+        //visited.push(c);
         console.log('clicking', c, '->', numMinesHere, 'mines');
     }
 
@@ -122,7 +184,7 @@ function solveMine(mineMap, n){
         // Get neighbours:
         var knownMines = neighbours(c,'x'),
             unknowns = neighbours(c,'?');
-        console.log(numMinesHere, 'm', knownMines.length, 'x', unknowns.length, '?');  // ok
+        //console.log(numMinesHere, 'm', knownMines.length, 'x', unknowns.length, '?');  // ok
 
         // Open neighbours:
         if (numMinesHere === 0 || numMinesHere === knownMines.length) {
@@ -132,6 +194,7 @@ function solveMine(mineMap, n){
                 //console.log('cl',un);
                 clickCell(unCell);
             });
+            visited.push(c);
         }
         else if (numMinesHere === knownMines.length + unknowns.length) {
             //console.log('Im going to mark all unknowns...');
@@ -140,8 +203,11 @@ function solveMine(mineMap, n){
                 //console.log('mk',um);
                 markMine(mineCell);
             });
+            visited.push(c);
         }
         else {
+            // Cell remains of interest
+            //interesting.push(c);
             console.log('No action possible here');
             //console.log(board);
         }
@@ -166,21 +232,14 @@ function solveMine(mineMap, n){
 
     function analyse() {
         // Clear up doubt about remaining '?' cells:
-        var cells = [];
-        for (var y = 0; y < height; y++) {
-            for (var x = 0; x < width; x++) {
-                if (board[y][x] === '?') cells.push([x,y]);
-            }
-        }
-        console.log("Remaining:", cells);
-        var sums = cells.map(function(cell) {
+        var sums = findAll('?').map(function(cell) {
             // Sum the numerical neighbours:
-            var nbs = neighbours(cell).filter(n => !['?','x'].includes(board[n[1]][n[0]]));
+            var nbs = neighbours(cell).filter(c => c.val !== 'x' && c.val !=='?');
             return [cell, nbs.reduce(function(a,b) { return a+b; }, 0)];
         });
         sums.sort((a,b) => a[1] - b[1]);
         console.log("Sums:", sums);
         var lowCell = sums[0][0];
-        clickCell(lowCell[0], lowCell[1], 'Analysis');
+        clickCell(lowCell);
     }
 }
