@@ -6,10 +6,12 @@ function Cell(x,y,val) {
 
 function solveMine(mineMap, totalMines){
     // Convert board:
-    var board = mineMap.split('\n')
-                       .map(row => row.split(' '));
-    var height = board.length,
-        width = board[0].length;
+    var board = mineMap.split('\n').map(row => row.split(' ')),
+        height = board.length,
+        width = board[0].length,
+        minesFound = 0,
+        interesting = [],
+        visited = [];
 
     // Initialise cells:
     var cells = [];
@@ -19,61 +21,71 @@ function solveMine(mineMap, totalMines){
         }
     }
 
-    var minesFound = 0,
-        interesting = [],
-        visited = [];
-
     // Start solving:
     return (function() {
         // Check all zeros, then all 1s, 2s... (multiple times)
         var passes = 0;
-        while (passes < 5) {
+        while (passes < 6) {
             console.log("-- Pass", passes);
             interesting = interesting.concat(findAll('0'));
             interesting = interesting.concat(findAll('1'));
-            interesting = interesting.concat(findAll('2'));    // more?
+            interesting = interesting.concat(findAll('2'));
+            interesting = interesting.concat(findAll('3'));    // more?
             console.log("Interesting:", interesting.length);
             while(interesting.length > 0) {
-                var cell = interesting.shift();
-                //visited.push(cell);    // only put them into visited here
-                clickAround(cell);
+                clickAround(interesting.shift());
             }
             passes++;
             console.log("Visited:", visited.length);
-            console.log(board);
+            //console.log(board);
         }
-        return solveEndgame();
+        console.log(JSON.stringify(board));
+        // All procedural moves made, onto part 2:
+        return solveEndgame(findAll('?'));
 
     }());
 
-    function solveEndgame() {
-        var remaining = findAll('?');
+    function solveEndgame(remaining) {
         var rMines = totalMines - minesFound;
         var solutions = [];
         console.log("Remaining:", remaining);
-        console.log("Interesting:", interesting);
         console.log(rMines, "mines left");
         if (remaining.length > 0) {
             // Try to resolve stalemate:
             console.log("Starting permutations...");
             var perms = simplePerms(rMines, remaining.length);
             for (var p of perms) {
-                generateSolution(p);
+                var sol = generateSolution(p);
+                if (validateSolution(sol)) {
+                    console.log("VALID!");
+                    solutions.push(JSON.stringify(sol));  // freeze it
+                }
             }
+            console.log('All solutions:\n', solutions);
             if (solutions.length > 1) return '?';
             else {
-                // Stringify for output:
-                mineMap = board.map(row => row.join(' ')).join('\n');
-                return (mineMap.includes('?')) ? '?' : mineMap;
+                var goodBoard = JSON.parse(solutions[0]);  // unfreeze it
+                console.log(goodBoard);
+                // Safely open the final '?'s of solution:
+                for (y = 0; y < height; y++) {
+                    for (x = 0; x < width; x++) {
+                        if (goodBoard[y][x] === '?') goodBoard[y][x] = open(y,x);
+                    }
+                }
+                return outputSingleBoard(goodBoard);
             }
         }
         else {
-            // Stringify for output:
-            mineMap = board.map(row => row.join(' ')).join('\n');
-            return (mineMap.includes('?')) ? '?' : mineMap;
+            return outputSingleBoard(board);
         }
 
-        function simplePerms(mines, spaces) {
+        function outputSingleBoard(board) {
+            // Stringify for output:
+            return board.map(row => row.join(' ')).join('\n');
+        }
+
+
+        function simplePermsOld(mines, spaces) {   // TODO Exceeds stack size when computing 2 from 10
             var basis = Array.from('x'.repeat(mines)).concat(Array.from('?'.repeat(spaces-mines)));
             var permutations = [];
             doPerm(basis, []);
@@ -94,50 +106,79 @@ function solveMine(mineMap, totalMines){
             }
         }
 
-        function generateSolution(comboStr) {   // TODO: not finished
-            var combo = comboStr.split('');
-            for (var i = 0; i < combo.length; i++) {
-                remaining[i].val = combo[i];
-            }
-            console.log(remaining);
-            if (validateSolution(sol)) {
-                solutions.push(sol);
-            }
-            // reset
-            for (var r of remaining) {
-                r.val = '?';
-            }
-        }
 
-        function validateSolution(sol) {    // TODO: not finished
-            for (var y = 0; y < height; y++) {
-                for (var x = 0; x < width; x++) {
-                    // Find respective cell object:
-                    for (var cell of cells) {
-                        if (x === cell.x && y === cell.y) {
-                            if (cell.val !== neighbours(cell, 'x').length) return false;  // error in this solution
-                            break;
+        function simplePerms(mines, spaces) {
+            var basis = Array.from('x'.repeat(mines)).concat(Array.from('?'.repeat(spaces-mines)));
+            return perms(basis);
+
+            function perms(arr) {
+                var res = [''];
+                for (var i = 0; i < arr.length; i++) {
+                    while (res[res.length-1].length === i) {
+                        var last = res.pop().split('');
+                        for (var j = 0; j <= last.length; j++) {
+                            var copy = last.slice();
+                            copy.splice(j, 0, arr[i]);
+                            var copyStr = copy.join('');
+                            if (!res.includes(copyStr)) res.unshift(copyStr);	// keep unique
                         }
                     }
                 }
+                return res;
             }
-            return true;
         }
 
+
+        function generateSolution(comboStr) {
+            console.log("Generating solution with", comboStr);
+            var combo = comboStr.split('');
+            var sol = board;
+            for (var i = 0; i < remaining.length; i++) {
+                var rCell = remaining[i];
+                rCell.val = combo[i];
+                // Load into solution:
+                sol[rCell.y][rCell.x] = rCell.val;
+            }
+            return sol;
+        }
+
+
+        function validateSolution(sol) {
+            // Examine neighbours of remaining cells:
+            for (var rCell of remaining) {
+                //console.log("From", rCell);
+                var nbs = neighbours(rCell,'');
+                for (var nbCell of nbs) {
+                    if (nbCell.val === 'x' || nbCell.val === '?') continue;
+                    var minesHere = neighbours(nbCell, 'x').length;
+                    //console.log("Test", nbCell, 'i see', minesHere);
+                    if (parseInt(nbCell.val) !== minesHere) {
+                        //console.log("INVALID!");
+                        return false; // error in this solution
+                    }
+                }
+            }
+            // No errors
+            return true;
+        }
     }
+
 
     function neighbours(c, matchChar) {
         // Get valid neighbours' coords:
         var x = c.x, y = c.y;
-        var neighbs = [[x-1,y-1], [x,y-1], [x+1,y-1],
-                       [x-1,y  ],          [x+1,y  ],
-                       [x-1,y+1], [x,y+1], [x+1,y+1]];
+        var coords = [[x-1,y-1], [x,y-1], [x+1,y-1],
+                      [x-1,y  ],          [x+1,y  ],
+                      [x-1,y+1], [x,y+1], [x+1,y+1]];
 
-        neighbs = neighbs.filter(n => isValidCell(n[0],n[1]) && board[n[1]][n[0]] === matchChar);
+        coords = coords.filter(n => isValidCell(n[0],n[1]));
+        if (matchChar !== '') {
+            coords = coords.filter(n => board[n[1]][n[0]] === matchChar);
+        }
 
-        // Find those as cell objects:
+        // Find those coords as cell objects:
         var validCells = [];
-        for (var nb of neighbs) {
+        for (var nb of coords) {
             for (var cell of cells) {
                 if (nb[0] === cell.x && nb[1] === cell.y) validCells.push(cell);
             }
@@ -157,7 +198,7 @@ function solveMine(mineMap, totalMines){
         board[c.y][c.x] = 'x';
         c.val = 'x';
         minesFound++;
-        console.log('marking', c, ', now found', minesFound, '/', totalMines, 'mines');
+        //console.log('marking', c, ', now found', minesFound, '/', totalMines, 'mines');
         if (minesFound === totalMines) {
             // Board is safe, finish it off:
             var remaining = findAll('?');
@@ -173,13 +214,13 @@ function solveMine(mineMap, totalMines){
         board[c.y][c.x] = numMinesHere;
         c.val = numMinesHere;
         //visited.push(c);
-        console.log('clicking', c, '->', numMinesHere, 'mines');
+        //console.log('clicking', c, '->', numMinesHere, 'mines');
     }
 
 
     function clickAround(c) {
         var numMinesHere = parseInt(c.val);
-        console.log('clicking around', c, '(', numMinesHere,')');
+        //console.log('clicking around', c, '(', numMinesHere,')');
 
         // Get neighbours:
         var knownMines = neighbours(c,'x'),
@@ -188,30 +229,15 @@ function solveMine(mineMap, totalMines){
 
         // Open neighbours:
         if (numMinesHere === 0 || numMinesHere === knownMines.length) {
-            //console.log('Im going to click all unknowns...');
-            // Click all '?'s
-            unknowns.forEach(function(unCell) {
-                //console.log('cl',un);
-                clickCell(unCell);
-            });
+            // Click all '?'s:
+            unknowns.forEach(unCell => clickCell(unCell));
             visited.push(c);
         }
         else if (numMinesHere === knownMines.length + unknowns.length) {
-            //console.log('Im going to mark all unknowns...');
-            // Mark all '?'s as 'x'
-            unknowns.forEach(function(mineCell) {
-                //console.log('mk',um);
-                markMine(mineCell);
-            });
+            // Mark all '?'s as 'x':
+            unknowns.forEach(mineCell => markMine(mineCell));
             visited.push(c);
         }
-        else {
-            // Cell remains of interest
-            //interesting.push(c);
-            console.log('No action possible here');
-            //console.log(board);
-        }
-        //console.log('Finished with', [x,y]);
     }
 
 
@@ -225,21 +251,7 @@ function solveMine(mineMap, totalMines){
                 }
             }
         }
-        console.log('Found', found.length, 'of', matchChar);
+        //console.log('Found', found.length, 'of', matchChar);
         return found;
-    }
-
-
-    function analyse() {
-        // Clear up doubt about remaining '?' cells:
-        var sums = findAll('?').map(function(cell) {
-            // Sum the numerical neighbours:
-            var nbs = neighbours(cell).filter(c => c.val !== 'x' && c.val !=='?');
-            return [cell, nbs.reduce(function(a,b) { return a+b; }, 0)];
-        });
-        sums.sort((a,b) => a[1] - b[1]);
-        console.log("Sums:", sums);
-        var lowCell = sums[0][0];
-        clickCell(lowCell);
     }
 }
