@@ -13,7 +13,39 @@ var result1 =
 2 x 2 1 2 2
 1 1 1 1 x 1
 0 0 0 1 1 1`;
-var resBoard = new Board(result1);
+var map2 =
+`0 0 0 0 0 0 0 0 0 0 0 0 ? ? ? 0 0 0 0 0 0 0 0 ? ? ? ? ? ? 0
+0 0 0 0 0 0 0 0 0 0 0 0 ? ? ? 0 ? ? ? 0 0 0 0 ? ? ? ? ? ? 0
+? ? ? 0 0 0 0 ? ? ? 0 0 0 0 ? ? ? ? ? 0 0 0 0 ? ? ? ? ? ? 0
+? ? ? ? ? ? 0 ? ? ? ? ? 0 0 ? ? ? ? ? 0 0 0 0 ? ? ? 0 0 0 0
+? ? ? ? ? ? 0 ? ? ? ? ? 0 0 ? ? ? ? 0 0 0 0 0 ? ? ? 0 0 ? ?
+0 ? ? ? ? ? 0 0 0 ? ? ? 0 ? ? ? ? ? 0 0 0 0 0 ? ? ? 0 0 ? ?
+0 ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? 0 0 0 ? ? ? ? ? ? ?
+0 0 0 ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? 0 ? ? ? 0 0 ? ? ? 0
+0 ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? ? 0 ? ? ? 0 0 ? ? ? 0
+? ? ? ? 0 ? ? ? ? 0 0 0 ? ? ? ? ? ? ? 0 0 ? ? ? 0 0 ? ? ? 0
+? ? ? ? 0 ? ? ? ? ? 0 0 ? ? ? ? ? ? ? 0 0 0 ? ? ? 0 0 0 0 0
+? ? ? ? ? ? ? ? ? ? 0 0 ? ? ? ? ? ? ? 0 0 0 ? ? ? ? 0 0 0 0
+? ? ? ? ? ? ? ? ? ? 0 0 0 0 ? ? ? ? ? 0 0 0 ? ? ? ? 0 0 0 0
+? ? ? ? ? ? ? 0 0 ? ? ? 0 0 ? ? ? 0 0 0 0 0 ? ? ? ? 0 0 0 0
+? ? ? ? 0 0 0 0 0 ? ? ? 0 0 ? ? ? 0 0 0 0 0 ? ? ? 0 0 0 0 0`;
+var result2 =
+`0 0 0 0 0 0 0 0 0 0 0 0 1 x 1 0 0 0 0 0 0 0 0 1 1 1 1 1 1 0
+ 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 0 1 1 1 0 0 0 0 2 x 2 1 x 1 0
+ 1 1 1 0 0 0 0 1 1 1 0 0 0 0 1 1 2 x 1 0 0 0 0 2 x 2 1 1 1 0
+ 1 x 1 1 1 1 0 1 x 2 1 1 0 0 1 x 2 1 1 0 0 0 0 1 1 1 0 0 0 0
+ 1 2 2 3 x 2 0 1 1 2 x 1 0 0 1 2 2 1 0 0 0 0 0 1 1 1 0 0 1 1
+ 0 1 x 3 x 2 0 0 0 1 1 1 0 1 2 3 x 1 0 0 0 0 0 1 x 1 0 0 1 x
+ 0 1 1 3 3 3 2 1 1 1 1 2 1 2 x x 2 2 1 1 0 0 0 1 1 1 1 1 2 1
+ 0 0 0 1 x x 2 x 1 1 x 2 x 2 3 3 3 2 x 1 0 1 1 1 0 0 2 x 2 0
+ 0 1 1 2 2 2 3 2 2 1 1 2 1 1 1 x 2 x 2 1 0 1 x 1 0 0 2 x 2 0
+ 1 2 x 1 0 1 2 x 1 0 0 0 1 1 2 2 3 2 1 0 0 1 1 1 0 0 1 1 1 0
+ 1 x 2 1 0 1 x 3 2 1 0 0 1 x 1 1 x 2 1 0 0 0 1 1 1 0 0 0 0 0
+ 1 1 2 1 2 2 2 2 x 1 0 0 1 1 1 1 2 x 1 0 0 0 1 x 2 1 0 0 0 0
+ 1 1 2 x 2 x 1 1 1 1 0 0 0 0 1 1 2 1 1 0 0 0 1 2 x 1 0 0 0 0
+ 1 x 3 2 2 1 1 0 0 1 1 1 0 0 1 x 1 0 0 0 0 0 1 2 2 1 0 0 0 0
+ 1 2 x 1 0 0 0 0 0 1 x 1 0 0 1 1 1 0 0 0 0 0 1 x 1 0 0 0 0 0`;
+var resBoard = new Board(result2);
 //console.log(resBoard.toString());
 const open = (y,x) => resBoard.board[y][x];
 //console.log(open(4,4));
@@ -172,7 +204,7 @@ function solveMine(mineMap, totalMines) {
 function solveEndgame(board) {
     var remaining = board.findAll('?');
     var rMines = board.totalMines - board.minesFound;
-    var solutions = [];
+    var solutions = {};
     console.log("Remaining:", remaining);
     console.log(rMines, "mines left");
 
@@ -186,28 +218,33 @@ function solveEndgame(board) {
         for (var p of perms) {
             var sol = generateSolution(p);
             if (validateSolution(sol)) {
-                console.log("VALID!");
-                solutions.push(sol);
+                console.log("VALID!", p);
+                solutions[p] = sol;     // use p / comboStr as the key
             }
         }
-        // TODO: Reset remaining cells to '?'
-        console.log(solutions.length, 'possible solutions');
-        if (solutions.length > 1) {
+        // Reset mutated cells:
+        for (var r of remaining) {
+            r.val = '?';
+        }
+        console.log(Object.keys(solutions).length, 'possible solutions');
+
+        // Now try to whittle down solutions:
+        if (Object.keys(solutions).length > 1) {
             var betterSolutions;
             while (true) {
                 betterSolutions = reduceSolutions(solutions);   // worst case, no change in solutions
                 if (betterSolutions) solutions = betterSolutions;   // keep smaller amount
                 else break;                                           // break when number stops decreasing
             }
-            if (solutions.length !== 1) {
+            if (Object.keys(solutions).length !== 1) {
                 return '?';                          // Unsolvable
             }
             else {
-                return outputFinal(solutions[0]);     // 1 solution
+                return outputFinal(solutions[Object.keys(solutions)[0]]);     // 1 solution
             }
         }
         else {
-            return outputFinal(solutions[0]);    // 1 solution
+            return outputFinal(solutions[Object.keys(solutions)[0]]);    // 1 solution
         }
     }
 
@@ -221,42 +258,56 @@ function solveEndgame(board) {
     function reduceSolutions(solutions) {
         if (!solutions) return false;
         // Need to try to reduce further:
-        var betterSolutions = [];
-        var safeCells = compareSolutions(solutions);
-        console.log('safe:\n',safeCells);
-        // Then click and eliminate some remaining cells
-        for (var c of safeCells) {
-            //console.log(c);
+        var betterSolutions = {};
+        var safeCells = findImmutableCells(solutions, 'x');
+        var mineCells = findImmutableCells(solutions, '?');
+        console.log('safe cells:\n',safeCells);
+        console.log('mine cells:\n',mineCells);
+
+        // Then mark / click and eliminate some remaining cells:
+        for (var mc of mineCells) {
+            remaining.splice(remaining.indexOf(mc),1);
+            console.log(remaining.length, "remaining");
+            // Mark cell on all boards:
+            for (var key of Object.keys(solutions)) {
+                solutions[key].markMine(mc);
+                if (validateSolution(solutions[key])) betterSolutions[key] = solutions[key];
+            }
+        }
+        for (var sc of safeCells) {
             // Open cell and remove from remainaing:
-            c.val = open(c.y,c.x);
-            remaining.splice(remaining.indexOf(c));
+            sc.val = open(sc.y,sc.x);
+            remaining.splice(remaining.indexOf(sc),1);
             console.log(remaining.length, "remaining");
             // Apply cell val to all solutions...
-            for (var soln of solutions) {
-                soln.setCellVal(c.x,c.y,c.val);
-                if (!validateSolution(soln)) betterSolutions.push(soln);
+            for (var key of Object.keys(solutions)) {
+                solutions[key].setCellVal(sc.x,sc.y,sc.val);
+                if (validateSolution(solutions[key])) betterSolutions[key] = solutions[key];
             }
         }
-        console.log('Better:\n', betterSolutions.length);
-        return (betterSolutions.length > 0 && betterSolutions.length < solutions.length) ? betterSolutions : false;
+        console.log('Better:', Object.keys(betterSolutions));
+        return (Object.keys(betterSolutions).length > 0 && Object.keys(betterSolutions).length < Object.keys(solutions).length) ? betterSolutions : false;
     }
 
-    function compareSolutions(solutions) {
-        // Compare solutions (NOT as JSON!) and find safe squares (never marked as mine):
-        var solBoards = solutions.map(sol => sol.board);
-        var safeCells = [];
-        for (var rCell of remaining) {
-            var safe = true;
-            for (var solb of solBoards) {
-                if (solb[rCell.y][rCell.x] === 'x') safe = false;  // not universally safe
-            }
-            if (safe) safeCells.push(rCell);
+    function findImmutableCells(solutions, matchChar) {
+        // Compare solutions (NOT as JSON!) and find immutable cells:
+        var solBoards = [];
+        for (var key of Object.keys(solutions)) {
+            solBoards.push(solutions[key].board);
         }
-        return safeCells;
+        var immutableCells = [];
+        for (var rCell of remaining) {
+            var immutable = true;
+            for (var solb of solBoards) {
+                if (solb[rCell.y][rCell.x] === matchChar) immutable = false;  // not universal / immutable
+            }
+            if (immutable) immutableCells.push(rCell);
+        }
+        return immutableCells;
     }
 
     function generateSolution(comboStr) {
-        console.log("Generating solution with", comboStr);
+        //console.log("Generating solution with", comboStr);
         //var combo = comboStr.split('');
         // Make a new Board object, via string, so it does not reference existing one:
         var sol = new Board(board.toString());
