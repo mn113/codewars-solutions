@@ -29,6 +29,25 @@ var map2 =
 ? ? ? ? ? ? ? ? ? ? 0 0 0 0 ? ? ? ? ? 0 0 0 ? ? ? ? 0 0 0 0
 ? ? ? ? ? ? ? 0 0 ? ? ? 0 0 ? ? ? 0 0 0 0 0 ? ? ? ? 0 0 0 0
 ? ? ? ? 0 0 0 0 0 ? ? ? 0 0 ? ? ? 0 0 0 0 0 ? ? ? 0 0 0 0 0`;
+
+/*
+0 0 0 0 0 0 0 0 0 0 0 0 1 x 1 0 0 0 0 0 0 0 0 1 1 1 1 1 1 0
+0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 0 0 1 1 0 0 0 0 0 2 x 2 1 x 0
+_ 1 1 0 0 0 0 0 1 1 0 0 0 0 0 1 1 2 x 0 0 0 0 0 2 x 2 1 1 0
+_ 1 x 1 1 1 0 0 1 x 2 1 0 0 0 1 x 2 1 0 0 0 0 0 1 1 0 0 0 0
+_ 1 2 2 3 x 0 0 1 1 2 x 0 0 0 1 2 2 0 0 0 0 0 0 1 1 0 0 0 1
+0 0 1 x 3 x 0 0 0 0 1 1 0 0 1 2 3 x 0 0 0 0 0 0 1 x 0 0 0 1
+0 0 1 1 3 3 3 2 1 1 1 1 2 1 2 x x 2 2 1 0 0 0 0 1 1 1 1 1 2
+0 0 0 0 1 x x 2 x 1 1 x 2 x 2 3 3 3 2 x 0 0 1 1 0 0 0 2 x 0
+0 0 1 1 2 2 2 3 2 2 1 1 2 1 1 1 x 2 x 2 0 0 1 x 0 0 0 2 x 0
+1 2 x 0 0 1 2 x 0 0 0 0 1 1 2 2 3 2 0 0 0 1 1 0 0 0 1 1 0
+? ? ? 2 0 0 1 x 3 2 0 0 0 1 x 1 1 x 2 0 0 0 0 1 1 0 0 0 0 0
+? ? ? 2 1 2 2 2 2 x 0 0 0 1 1 1 1 2 x 0 0 0 0 1 x 2 0 0 0 0
+? ? ? 2 x 2 x 1 1 1 0 0 0 0 0 1 1 2 1 0 0 0 0 1 2 x 0 0 0 0
+? ? ? 3 2 2 1 0 0 0 1 1 0 0 0 1 x 0 0 0 0 0 0 1 2 2 0 0 0 0
+? ? ? x 0 0 0 0 0 0 1 x 0 0 0 1 1 0 0 0 0 0 0 1 x 0 0 0 0 0
+*/
+
 var result2 =
 `0 0 0 0 0 0 0 0 0 0 0 0 1 x 1 0 0 0 0 0 0 0 0 1 1 1 1 1 1 0
  0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 0 1 1 1 0 0 0 0 2 x 2 1 x 1 0
@@ -49,7 +68,8 @@ var resBoard = new Board(result2);
 //console.log(resBoard.toString());
 const open = (y,x) => resBoard.board[y][x];
 //console.log(open(4,4));
-console.log(solveMine(map1,6));
+//console.log(solveMine(map1,6));
+console.log(solveMine(map2,45));
 
 
 function Cell(x,y,val) {
@@ -187,16 +207,18 @@ function solveMine(mineMap, totalMines) {
     // Check all zeros, then all 1s, 2s... (multiple times)
     var passes = 0;
     while (passes < 6) {
-        console.log("-- Pass", passes);
+        console.log("-- Pass", passes, "--");
         board.getInteresting();
         console.log("Interesting:", board.interesting.length);
         while(board.interesting.length > 0) {
             board.clickAround(board.interesting.shift());
         }
-        console.log("Visited:", board.visited.length);
+        console.log("Visited (total):", board.visited.length);
+        console.log("Mines found (total):", board.minesFound);
         passes++;
     }
-
+    //console.log(board.board[0].length,board.board[1].length,board.board[2].length, board.board[3].length, board.board[4].length);
+    console.log(board.toString());
     // All procedural moves made, onto part 2:
     return solveEndgame(board);
 }
