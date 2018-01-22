@@ -1,4 +1,6 @@
 function Canvas(width, height) {
+  if (width < 1 || height < 1) throw "Out of bounds";
+
   var h = height;
   this.canvArr = [];
   while (h > 0) {
@@ -6,7 +8,14 @@ function Canvas(width, height) {
     h--;
   }
 
-  this.draw = (x1, y1, x2, y2) => {
+  this.draw = (xa, ya, xb, yb) => {
+    var x1 = Math.min(xa,xb),
+        x2 = Math.max(xa,xb),
+        y1 = Math.min(ya,yb),
+        y2 = Math.max(ya,yb);
+
+    if (x1 < 0 || x2 >= width || y1 < 0 || y2 >= height) throw "Out of bounds";
+
     // Vertical line(s):
     for (var y = y1; y <= y2; y++) {
       this.canvArr[y][x1] = 'x';
@@ -16,22 +25,25 @@ function Canvas(width, height) {
     for (var x = x1; x <= x2; x++) {
       this.canvArr[y1][x] = 'x';
       this.canvArr[y2][x] = 'x';
-    }    
+    }
     return this;
   }
-  
+
   this.fill = (x, y, ch) => {
-    function fillNeighbs(x,y,ch) {
+    if (x < 0 || x >= width || y < 0 || y >= height) throw "Out of bounds";
+    if (this.canvArr[y][x] !== " ") return;
+
+    const fillNeighbs = (x, y, ch) => {
       // Fill me:
-      this.canvArr[y][x] = ch;
+      this.canvArr[y][x] = ch;  // top-level context
       // Fill my empty neighbs:
-      var empty_neighbs = [[0,-1],[-1,0],[0,1],[1,0]]
-        .map(nb => {x: x+nb[0], y: y+nb[1]})
-        .filter(c => c.x >= 0 && c.x < width && c.y >= 0 && c.y < height) // stay in bounds
-        .filter(c => this.canvArr[c.y][c.y] == " ")
-        .forEach(nb => { fillNeighbs(nb) });        // will end recursion when no more neighbs
+      [[0,-1],[-1,0],[0,1],[1,0]]
+        .map(nb => { return {x: x+nb[0], y: y+nb[1]}; })
+        .filter(nb => nb.x >= 0 && nb.x < width && nb.y >= 0 && nb.y < height) // stay in bounds
+        .filter(nb => this.canvArr[nb.y][nb.x] == " ")        // best case 0, worst case 4
+        .forEach(nb => { fillNeighbs(nb.x, nb.y, ch) });      // will end recursion when no more neighbs
     }
-    fillNeighbs(x,y,ch);
+    fillNeighbs(x, y, ch);
     return this;
   }
 
